@@ -15,7 +15,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "chave_secreta")
 ALGORITHM = "HS256"
 EXPIRA_EM = 60  # minutos
 
-pwd_context = CryptContext(schemes=["bcrypt"])
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def hash_senha(senha: str):
