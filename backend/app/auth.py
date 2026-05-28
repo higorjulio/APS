@@ -46,3 +46,8 @@ def apenas_admin(usuario: User = Depends(get_usuario_atual)):
     if usuario.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso restrito a admins")
     return usuario
+
+def apenas_professor(usuario: User = Depends(get_usuario_atual)):
+    if usuario.role != "professor":
+        raise HTTPException(status_code=403, detail="Acesso restrito a professores")
+    return usuario
