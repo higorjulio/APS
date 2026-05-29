@@ -42,8 +42,12 @@ with col2:
 
 with col3:
     if notas:
-        media = sum(float(n.get("valor", 0)) for n in notas) / len(notas)
-        st.metric("Média", f"{media:.1f}")
+        try:
+            valores = [float(n.get("valor", 0)) for n in notas if n.get("valor") is not None]
+            media = sum(valores) / len(valores) if valores else 0
+            st.metric("Média", f"{media:.1f}")
+        except (ValueError, TypeError):
+            st.metric("Média", "-")
     else:
         st.metric("Média", "-")
 
@@ -93,24 +97,31 @@ with aba2:
         st.error("Erro ao carregar matrículas.")
     elif matriculas:
         for matricula in matriculas:
+            # Pegar notas dessa matrícula
+            notas_matricula = [n for n in notas if n.get("enrollment_id") == matricula.get("id")]
+            
             with st.container(border=True):
-                col1, col2, col3, col4 = st.columns(4)
+                col1, col2, col3 = st.columns([2, 2, 1])
 
                 with col1:
-                    st.write("**ID**")
-                    st.write(matricula.get("id", "-"))
+                    st.write("**Disciplina ID**")
+                    st.write(str(matricula.get("disciplina_id", "-")))
 
                 with col2:
-                    st.write("**Aluno ID**")
-                    st.write(matricula.get("aluno_id", "-"))
+                    st.write("**Status**")
+                    st.write(str(matricula.get("status", "-")).upper())
 
                 with col3:
-                    st.write("**Disciplina ID**")
-                    st.write(matricula.get("disciplina_id", "-"))
-
-                with col4:
-                    st.write("**Status**")
-                    st.write(matricula.get("status", "-"))
+                    st.write("**Semestre/Ano**")
+                    st.write(f"{matricula.get('semestre', '-')}/{matricula.get('ano', '-')}")
+                
+                if notas_matricula:
+                    st.write("---")
+                    st.write("**Notas:**")
+                    for nota in notas_matricula:
+                        st.write(f"• {nota.get('atividade', 'Atividade')}: **{nota.get('valor', '-')}**")
+                else:
+                    st.write("*Sem notas registradas*")
     else:
         st.info("Nenhuma matrícula encontrada.")
 

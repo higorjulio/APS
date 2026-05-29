@@ -1,11 +1,26 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Grade, Enrollment
+from app.models import Grade, Enrollment, Student
 from app.schemas import GradeCreate, GradeResponse
 from app.auth import get_usuario_atual, apenas_admin
 
 router = APIRouter(prefix="/notas", tags=["Notas"])
+
+@router.get("/", response_model=list[GradeResponse])
+def listar_notas(db: Session = Depends(get_db), usuario = Depends(get_usuario_atual)):
+    if usuario.role in ["admin", "professor"]:
+        return db.query(Grade).all()
+    else:
+        # Para alunos: retornar apenas notas das suas matrículas
+        aluno = db.query(Student).filter(Student.user_id == usuario.id).first()
+        if not aluno:
+            return []
+        
+        # Pegar todas as notas das matrículas do aluno
+        return db.query(Grade).join(Enrollment).filter(
+            Enrollment.aluno_id == aluno.id
+        ).all()
 
 @router.post("/", response_model=GradeResponse, status_code=201)
 def lancar_nota(dados: GradeCreate, db: Session = Depends(get_db), usuario = Depends(get_usuario_atual)):

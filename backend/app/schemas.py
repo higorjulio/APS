@@ -83,6 +83,7 @@ class GradeCreate(BaseModel):
 
 class GradeResponse(BaseModel):
     id: int
+    enrollment_id: int
     atividade: str
     valor: float
 

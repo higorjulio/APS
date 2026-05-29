@@ -82,19 +82,19 @@ with aba1:
 
                 with col1:
                     st.write("**ID**")
-                    st.write(aluno.get("id", "-"))
+                    st.write(str(aluno.get("id", "-")))
 
                 with col2:
                     st.write("**Nome**")
-                    st.write(aluno.get("name", "-"))
+                    st.write(str(aluno.get("name", "-")))
 
                 with col3:
                     st.write("**E-mail**")
-                    st.write(aluno.get("email", "-"))
+                    st.write(str(aluno.get("email", "-")))
 
                 with col4:
                     st.write("**Role**")
-                    st.write(aluno.get("role", "-"))
+                    st.write(str(aluno.get("role", "-")))
     else:
         st.info("Nenhum aluno encontrado.")
 
@@ -107,13 +107,19 @@ with aba2:
         professor_id = st.number_input("ID do professor", min_value=0, step=1)
 
         if st.button("Cadastrar disciplina", use_container_width=True):
-            resposta = cadastrar_disciplina(codigo, nome, professor_id, token)
-
-            if resposta.status_code in [200, 201]:
-                st.success("Disciplina cadastrada com sucesso!")
-                st.rerun()
+            if not codigo or not nome:
+                st.error("Preencha código e nome.")
             else:
-                st.error("Erro ao cadastrar disciplina.")
+                resposta = cadastrar_disciplina(codigo, nome, professor_id, token)
+
+                if resposta.status_code in [200, 201]:
+                    st.success("Disciplina cadastrada com sucesso!")
+                    st.rerun()
+                else:
+                    try:
+                        st.error(resposta.json().get("detail", "Erro ao cadastrar disciplina."))
+                    except:
+                        st.error("Erro ao cadastrar disciplina.")
 
     st.divider()
 
@@ -160,7 +166,10 @@ with aba3:
                 st.success("Matrícula cadastrada com sucesso!")
                 st.rerun()
             else:
-                st.error("Erro ao cadastrar matrícula.")
+                try:
+                    st.error(resposta.json().get("detail", "Erro ao cadastrar matrícula."))
+                except:
+                    st.error("Erro ao cadastrar matrícula.")
 
     st.divider()
 
@@ -198,18 +207,24 @@ with aba4:
         valor = st.number_input("Nota", min_value=0.0, max_value=10.0, step=0.1)
 
         if st.button("Cadastrar nota", use_container_width=True):
-            resposta = cadastrar_nota(
-                enrollment_id,
-                atividade,
-                valor,
-                token
-            )
-
-            if resposta.status_code in [200, 201]:
-                st.success("Nota cadastrada com sucesso!")
-                st.rerun()
+            if not atividade:
+                st.error("Preencha a atividade.")
             else:
-                st.error("Erro ao cadastrar nota.")
+                resposta = cadastrar_nota(
+                    enrollment_id,
+                    atividade,
+                    valor,
+                    token
+                )
+
+                if resposta.status_code in [200, 201]:
+                    st.success("Nota cadastrada com sucesso!")
+                    st.rerun()
+                else:
+                    try:
+                        st.error(resposta.json().get("detail", "Erro ao cadastrar nota."))
+                    except:
+                        st.error("Erro ao cadastrar nota.")
 
     st.divider()
 

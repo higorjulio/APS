@@ -1,31 +1,68 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import User
+from app.models import User, Student
 from app.schemas import UserCreate, UserLogin, UserResponse, Token
 from app.auth import hash_senha, verificar_senha, criar_token, get_usuario_atual
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
 #REGISTRAR
 
 @router.post("/register", response_model=UserResponse, status_code=201)
 def registrar(dados: UserCreate, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.email == dados.email).first():
-        raise HTTPException(status_code=400, detail="E-mail já cadastrado")
-    if dados.role not in ["aluno", "professor", "admin"]:
-        raise HTTPException(status_code=400, detail="role invalido")
-    else:
+    try:
+        # Validar email duplicado
+        if db.query(User).filter(User.email == dados.email).first():
+            raise HTTPException(status_code=400, detail="E-mail já cadastrado")
+        
+        # Validar role
+        if dados.role not in ["aluno", "professor", "admin"]:
+            raise HTTPException(status_code=400, detail="role inválido")
+        
+        # Hash da senha
+        try:
+            senha_hash = hash_senha(dados.password)
+        except Exception as e:
+            logger.error(f"Erro ao fazer hash da senha: {str(e)}")
+            raise HTTPException(status_code=500, detail="Erro ao processar senha")
+        
+        # Criar usuário
         usuario = User(
             name=dados.name,
             email=dados.email,
-            password=hash_senha(dados.password),
+            password=senha_hash,
             role=dados.role
         )
         db.add(usuario)
         db.commit()
         db.refresh(usuario)
+        
+        # Se for aluno, criar registro em Student
+        if dados.role == "aluno":
+            try:
+                aluno = Student(
+                    user_id=usuario.id,
+                    matricula=f"ALU{usuario.id:06d}",
+                    curso="Não definido",
+                    semestre=1
+                )
+                db.add(aluno)
+                db.commit()
+            except Exception as e:
+                logger.error(f"Erro ao criar aluno: {str(e)}")
+                db.rollback()
+                # Não falha o registro, só não cria aluno
+        
         return usuario
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro no registro: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Erro ao registrar usuário")
 
 #LOGIN
 

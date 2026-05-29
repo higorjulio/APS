@@ -95,3 +95,18 @@ def cadastrar_nota(enrollment_id, atividade, valor, token):
         },
         headers={"Authorization": f"Bearer {token}"}
     )
+
+
+def editar_matricula(id, status, token):
+    return requests.put(
+        f"{BASE_URL}/matriculas/{id}/status",
+        json={"status": status},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+
+
+def deletar_matricula(id, token):
+    return requests.delete(
+        f"{BASE_URL}/matriculas/{id}",
+        headers={"Authorization": f"Bearer {token}"}
+    )

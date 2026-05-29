@@ -202,7 +202,10 @@ with aba4:
                 st.success("Nota lançada com sucesso!")
                 st.rerun()
             else:
-                st.error("Erro ao lançar nota.")
+                try:
+                    st.error(resposta.json().get("detail", "Erro ao lançar nota."))
+                except:
+                    st.error("Erro ao lançar nota.")
 
     st.divider()
 

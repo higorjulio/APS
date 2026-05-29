@@ -246,8 +246,6 @@ with col2:
             st.session_state.pagina = "login"
             st.rerun()
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
 st.write("")
 st.markdown("""
 <p class="footer-text">
